@@ -38,6 +38,7 @@ type Client struct {
 	Languages       *LanguagesService
 	Tags            *TagsService
 	Videos          *VideosService
+	MeVideos        *VideosService
 	Users           *UsersService
 }
 
@@ -64,6 +65,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Languages = &LanguagesService{client: c}
 	c.Tags = &TagsService{client: c}
 	c.Videos = &VideosService{client: c}
+	c.MeVideos = &VideosService{client: c, urlPrefix: "me/"}
 	c.Users = &UsersService{client: c}
 	return c
 }

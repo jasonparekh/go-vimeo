@@ -15,7 +15,11 @@ import (
 // methods of the Vimeo API.
 //
 // Vimeo API docs: https://developer.vimeo.com/api/endpoints/videos
-type VideosService service
+type VideosService struct {
+	client    *Client
+	urlPrefix string
+}
+
 
 type dataListVideo struct {
 	Data []*Video `json:"data,omitempty"`
@@ -411,7 +415,7 @@ func addVideo(c *Client, url string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos
 func (s *VideosService) List(opt *ListVideoOptions) ([]*Video, *Response, error) {
-	videos, resp, err := listVideo(s.client, "videos", opt)
+	videos, resp, err := listVideo(s.client, s.url(""), opt)
 
 	return videos, resp, err
 }
@@ -420,7 +424,7 @@ func (s *VideosService) List(opt *ListVideoOptions) ([]*Video, *Response, error)
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D
 func (s *VideosService) Get(vid int) (*Video, *Response, error) {
-	u := fmt.Sprintf("videos/%d", vid)
+	u := s.url("%d", vid)
 	video, resp, err := getVideo(s.client, u)
 
 	return video, resp, err
@@ -430,7 +434,7 @@ func (s *VideosService) Get(vid int) (*Video, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D
 func (s *VideosService) Edit(vid int, r *VideoRequest) (*Video, *Response, error) {
-	u := fmt.Sprintf("videos/%d", vid)
+	u := s.url("%d", vid)
 	req, err := s.client.NewRequest("PATCH", u, r)
 	if err != nil {
 		return nil, nil, err
@@ -449,7 +453,7 @@ func (s *VideosService) Edit(vid int, r *VideoRequest) (*Video, *Response, error
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D
 func (s *VideosService) Delete(vid int) (*Response, error) {
-	u := fmt.Sprintf("videos/%d", vid)
+	u := s.url("%d", vid)
 	resp, err := deleteVideo(s.client, u)
 
 	return resp, err
@@ -459,7 +463,7 @@ func (s *VideosService) Delete(vid int) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/categories
 func (s *VideosService) ListCategory(vid int, opt *ListCategoryOptions) ([]*Category, *Response, error) {
-	u := fmt.Sprintf("videos/%d/categories", vid)
+	u := s.url("%d/categories", vid)
 	catogories, resp, err := listCategory(s.client, u, opt)
 
 	return catogories, resp, err
@@ -469,7 +473,7 @@ func (s *VideosService) ListCategory(vid int, opt *ListCategoryOptions) ([]*Cate
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/likes
 func (s *VideosService) LikeList(vid int, opt *ListUserOptions) ([]*User, *Response, error) {
-	u := fmt.Sprintf("videos/%d/likes", vid)
+	u := s.url("%d/likes", vid)
 	users, resp, err := listUser(s.client, u, opt)
 
 	return users, resp, err
@@ -479,7 +483,7 @@ func (s *VideosService) LikeList(vid int, opt *ListUserOptions) ([]*User, *Respo
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/presets/%7Bpreset_id%7D
 func (s *VideosService) GetPreset(vid int, p int) (*Preset, *Response, error) {
-	u := fmt.Sprintf("videos/%d/presets/%d", vid, p)
+	u := s.url("%d/presets/%d", vid, p)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, nil, err
@@ -499,7 +503,7 @@ func (s *VideosService) GetPreset(vid int, p int) (*Preset, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/presets/%7Bpreset_id%7D
 func (s *VideosService) AssignPreset(vid int, p int) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/presets/%d", vid, p)
+	u := s.url("%d/presets/%d", vid, p)
 	req, err := s.client.NewRequest("PUT", u, nil)
 	if err != nil {
 		return nil, err
@@ -512,7 +516,7 @@ func (s *VideosService) AssignPreset(vid int, p int) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/presets/%7Bpreset_id%7D
 func (s *VideosService) UnassignPreset(vid int, p int) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/presets/%d", vid, p)
+	u := s.url("%d/presets/%d", vid, p)
 	req, err := s.client.NewRequest("DELETE", u, nil)
 	if err != nil {
 		return nil, err
@@ -536,7 +540,7 @@ type Domain struct {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/domains
 func (s *VideosService) ListDomain(vid int) ([]*Domain, *Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/domains", vid)
+	u := s.url("%d/privacy/domains", vid)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, nil, err
@@ -558,7 +562,7 @@ func (s *VideosService) ListDomain(vid int) ([]*Domain, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/domains/%7Bdomain%7D
 func (s *VideosService) AllowDomain(vid int, d string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/domains/%s", vid, d)
+	u := s.url("%d/privacy/domains/%s", vid, d)
 	req, err := s.client.NewRequest("PUT", u, nil)
 	if err != nil {
 		return nil, err
@@ -571,7 +575,7 @@ func (s *VideosService) AllowDomain(vid int, d string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/domains/%7Bdomain%7D
 func (s *VideosService) DisallowDomain(vid int, d string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/domains/%s", vid, d)
+	u := s.url("%d/privacy/domains/%s", vid, d)
 	req, err := s.client.NewRequest("DELETE", u, nil)
 	if err != nil {
 		return nil, err
@@ -584,7 +588,7 @@ func (s *VideosService) DisallowDomain(vid int, d string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/users
 func (s *VideosService) ListUser(vid int) ([]*User, *Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/users", vid)
+	u := s.url("%d/privacy/users", vid)
 	users, resp, err := listUser(s.client, u, nil)
 
 	return users, resp, err
@@ -594,7 +598,7 @@ func (s *VideosService) ListUser(vid int) ([]*User, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/users
 func (s *VideosService) AllowUsers(vid int) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/users", vid)
+	u := s.url("%d/privacy/users", vid)
 	req, err := s.client.NewRequest("PUT", u, nil)
 	if err != nil {
 		return nil, err
@@ -607,7 +611,7 @@ func (s *VideosService) AllowUsers(vid int) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/users/%7Buser_id%7D
 func (s *VideosService) AllowUser(vid int, uid string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/users/%s", vid, uid)
+	u := s.url("%d/privacy/users/%s", vid, uid)
 	req, err := s.client.NewRequest("PUT", u, nil)
 	if err != nil {
 		return nil, err
@@ -620,7 +624,7 @@ func (s *VideosService) AllowUser(vid int, uid string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/privacy/users/%7Buser_id%7D
 func (s *VideosService) DisallowUser(vid int, uid string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/privacy/users/%s", vid, uid)
+	u := s.url("%d/privacy/users/%s", vid, uid)
 	req, err := s.client.NewRequest("DELETE", u, nil)
 	if err != nil {
 		return nil, err
@@ -633,7 +637,7 @@ func (s *VideosService) DisallowUser(vid int, uid string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/tags
 func (s *VideosService) ListTag(vid int) ([]*Tag, *Response, error) {
-	u := fmt.Sprintf("videos/%d/tags", vid)
+	u := s.url("%d/tags", vid)
 	tags, resp, err := listTag(s.client, u)
 
 	return tags, resp, err
@@ -643,7 +647,7 @@ func (s *VideosService) ListTag(vid int) ([]*Tag, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/tags/%7Bword%7D
 func (s *VideosService) GetTag(vid int, t string) (*Tag, *Response, error) {
-	u := fmt.Sprintf("videos/%d/tags/%s", vid, t)
+	u := s.url("%d/tags/%s", vid, t)
 	tag, resp, err := getTag(s.client, u)
 
 	return tag, resp, err
@@ -653,7 +657,7 @@ func (s *VideosService) GetTag(vid int, t string) (*Tag, *Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/tags/%7Bword%7D
 func (s *VideosService) AssignTag(vid int, t string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/tags/%s", vid, t)
+	u := s.url("%d/tags/%s", vid, t)
 	req, err := s.client.NewRequest("PUT", u, nil)
 	if err != nil {
 		return nil, err
@@ -666,7 +670,7 @@ func (s *VideosService) AssignTag(vid int, t string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/tags/%7Bword%7D
 func (s *VideosService) UnassignTag(vid int, t string) (*Response, error) {
-	u := fmt.Sprintf("videos/%d/tags/%s", vid, t)
+	u := s.url("%d/tags/%s", vid, t)
 	req, err := s.client.NewRequest("DELETE", u, nil)
 	if err != nil {
 		return nil, err
@@ -679,8 +683,15 @@ func (s *VideosService) UnassignTag(vid int, t string) (*Response, error) {
 //
 // Vimeo API docs: https://developer.vimeo.com/api/playground/videos/%7Bvideo_id%7D/videos
 func (s *VideosService) ListRelatedVideo(vid int, opt *ListVideoOptions) ([]*Video, *Response, error) {
-	u := fmt.Sprintf("videos/%d/videos", vid)
+	u := s.url("%d/videos", vid)
 	videos, resp, err := listVideo(s.client, u, opt)
 
 	return videos, resp, err
+}
+
+func (s *VideosService) url(suffixFormat string, a ...interface{}) string {
+	if !strings.HasPrefix(suffixFormat, "/") {
+		suffixFormat = "/" + suffixFormat
+	}
+	return fmt.Sprintf("%svideos%s", s.urlPrefix, fmt.Sprintf(suffixFormat, a...))
 }
